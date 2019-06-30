@@ -4,10 +4,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECT_NAME uno-security)
 set(${PROJECT_NAME}_BOARD uno)
+set(${PROJECT_NAME}_SKETCH src/UnoSecurity.ino)
 set(${PROJECT_NAME}_PORT COM3)
 # set(${PROJECT_NAME}_PROGRAMMER avrispmkii)
 # set(${PROJECT_NAME}_AFLAGS -v)
-# set(${PROJECT_NAME}_SKETCH src/UnoSecurity.cpp)
 # set(ARDUINO_CPU)
 # set(uno.upload.speed 9600)
 
@@ -21,9 +21,9 @@ link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(include)
 
 # Search for sources
-file(GLOB_RECURSE SOURCES src/*.cpp)
+# file(GLOB_RECURSE SOURCES src/*.cpp)
 
-set(${PROJECT_NAME}_SRCS ${SOURCES})
+# set(${PROJECT_NAME}_SRCS ${SOURCES})
 # set(${PROJECT_NAME}_HDRS ${HEADERS})
 # set(${PROJECT_NAME}_LIBS ${LIBRARIES})
 set(${PROJECT_NAME}_ARDLIBS
