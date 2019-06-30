@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Compile Directory
+cmake-build-debug/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -30,3 +33,8 @@
 *.exe
 *.out
 *.app
+
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
+## Directory-based project format
+
+.idea/
