@@ -5,13 +5,12 @@
 
 using namespace Sim800Commands;
 
-GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages = true)
+GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages)
 {
     gsm = new SoftwareSerial(receivePin, transmitPin);
     this->traceGsmMessages = traceGsmMessages;
 
     gsm->begin(speed);
-    // sendCommand(strcat(COMMAND_AT, CR)); //TODO
 }
 
 GsmModule::~GsmModule()
