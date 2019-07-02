@@ -5,24 +5,22 @@
 
 using namespace Sim800Commands;
 
-GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages)
+GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(SoftwareSerial(receivePin, transmitPin))
 {
-    gsm = new SoftwareSerial(receivePin, transmitPin);
     this->traceGsmMessages = traceGsmMessages;
 
-    gsm->begin(speed);
+    gsm.begin(speed);
 }
 
 GsmModule::~GsmModule()
 {
-    delete gsm;
 }
 
 void GsmModule::check()
 {
-    if (gsm->available())
+    if (gsm.available())
     {
-        String gmsMessage = gsm->readString();
+        String gmsMessage = gsm.readString();
         if (traceGsmMessages)
         {
             Serial.println(">>-----"); //TODO For testing only!
@@ -46,7 +44,7 @@ void GsmModule::addPhoneListener(IGsmPhoneListener *phoneListener)
 void GsmModule::sendCommand(String command)
 {
     //TODO Add logging
-    gsm->print(command);
+    gsm.print(command);
 }
 
 void GsmModule::call(String number)

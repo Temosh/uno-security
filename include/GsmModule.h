@@ -55,7 +55,7 @@ private:
     void parseAnswer(String response);
     void processSms();
 
-    SoftwareSerial *gsm;
+    SoftwareSerial gsm;
     bool traceGsmMessages;
 
     IGsmPhoneListener *phoneListener;
