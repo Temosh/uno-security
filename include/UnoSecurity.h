@@ -1,9 +1,9 @@
-//
-// Created by svtem on 30.06.2019.
-//
+#ifndef UnoSecurity_H_
+#define UnoSecurity_H_
 
-#ifndef UNO_SECURITY_H
-#define UNO_SECURITY_H
+#include "Keypad.h"
 
+void distributeTickEvent();
+void keypadEvent(KeypadEvent key);
 
-#endif //UNO_SECURITY_H
+#endif
