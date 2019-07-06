@@ -21,8 +21,8 @@ class Phone : public IGsmPhoneListener
 // class Phone
 {
 public:
-    Phone(const GsmModule &gsm, const LiquidCrystal_I2C &lcd);
-    ~Phone();
+    Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd);
+    ~Phone() = default;
     void onKeyEvent(KeypadEvent key);
     void onPhoneCall(String number) override;
     void onPhoneEvent(GsmStatusCode code) override;
@@ -30,8 +30,8 @@ public:
 private:
     void changePhoneState(PhoneState newState);
 
-    GsmModule gsm;
-    LiquidCrystal_I2C lcd;
+    GsmModule &gsm;
+    LiquidCrystal_I2C &lcd;
 
     String phoneNumber;
     PhoneState phoneState;

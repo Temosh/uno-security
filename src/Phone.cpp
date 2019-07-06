@@ -1,12 +1,8 @@
 #include "Phone.h"
 
-Phone::Phone(const GsmModule &gsm, const LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd)
+Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd)
 {
     changePhoneState(READY);
-}
-
-Phone::~Phone()
-{
 }
 
 void Phone::onKeyEvent(KeypadEvent key)

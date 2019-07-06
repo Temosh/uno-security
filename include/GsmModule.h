@@ -43,19 +43,19 @@ public:
     void check();
     void addPhoneListener(IGsmPhoneListener *phoneListener);
     void addSmsListener(IGsmSmsListener *smsListener);
-    void sendCommand(String command);
-    void call(String);
+    void sendCommand(const String& command);
+    void call(const String&);
     void cancelCall();
     void answerCall();
 
 private:
-    void parseGsmMessage(String &gmsMessage);
-    bool isStatusCode(String response);
-    GsmStatusCode parseStatusCode(String response);
+    void parseGsmMessage(String gmsMessage);
+    bool isStatusCode(const String& response);
+    GsmStatusCode parseStatusCode(const String& response);
     void parseAnswer(String response);
     void processSms();
 
-    SoftwareSerial gsm;
+    SoftwareSerial *gsm;
     bool traceGsmMessages;
 
     IGsmPhoneListener *phoneListener;

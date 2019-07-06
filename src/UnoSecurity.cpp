@@ -25,7 +25,8 @@ byte KEYPAD_ROW_PINS[KEYPAD_ROWS] = {11, 10, 9, 8};
 byte KEYPAD_COLUMN_PINS[KEYPAD_COLUMNS] = {7, 6, 5, 4};
 
 Keypad keypad(makeKeymap(KEYPAD_KEYS), KEYPAD_ROW_PINS, KEYPAD_COLUMN_PINS, KEYPAD_ROWS, KEYPAD_COLUMNS);
-GsmModule *gsmModule;
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
+GsmModule gsmModule(2, 3, 4800);
 Phone *phone;
 
 void setup()
@@ -34,16 +35,13 @@ void setup()
 	Logger::setLogLevel(Logger::NOTICE);
 	Logger::notice(LOG_TAG, "Testing GSM SIM800L...");
 
-	gsmModule = new GsmModule(2, 3, 4800);
-
-	LiquidCrystal_I2C lcd(0x3F, 16, 2);
 	lcd.init();
 	lcd.backlight();
 
 	keypad.addEventListener(keypadEvent);
 
-	phone = new Phone(*gsmModule, lcd);
-	gsmModule->addPhoneListener(phone);
+	phone = new Phone(gsmModule, lcd);
+	gsmModule.addPhoneListener(phone);
 }
 
 void loop()
@@ -54,14 +52,14 @@ void loop()
 	{
 		String command = Serial.readString();
 		Serial.println(">" + command);
-		gsmModule->sendCommand(command);
+		gsmModule.sendCommand(command);
 	}
 }
 
 void distributeTickEvent()
 {
 	keypad.getKeys();
-	gsmModule->check();
+	gsmModule.check();
 }
 
 void keypadEvent(KeypadEvent key)

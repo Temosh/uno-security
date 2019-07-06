@@ -5,22 +5,24 @@
 
 using namespace Sim800Commands;
 
-GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(SoftwareSerial(receivePin, transmitPin))
+GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(new SoftwareSerial(receivePin, transmitPin))
 {
     this->traceGsmMessages = traceGsmMessages;
 
-    gsm.begin(speed);
+    gsm->begin(speed);
 }
 
 GsmModule::~GsmModule()
 {
+    gsm->end();
+    delete gsm;
 }
 
 void GsmModule::check()
 {
-    if (gsm.available())
+    if (gsm->available())
     {
-        String gmsMessage = gsm.readString();
+        String gmsMessage = gsm->readString();
         if (traceGsmMessages)
         {
             Serial.println(">>-----"); //TODO For testing only!
@@ -41,13 +43,13 @@ void GsmModule::addPhoneListener(IGsmPhoneListener *phoneListener)
     this->phoneListener = phoneListener;
 }
 
-void GsmModule::sendCommand(String command)
+void GsmModule::sendCommand(const String& command)
 {
     //TODO Add logging
-    gsm.print(command);
+    gsm->print(command);
 }
 
-void GsmModule::call(String number)
+void GsmModule::call(const String& number)
 {
     String command = COMMAND_DIAL + number + SEMICOLON + CR;
     sendCommand(command);
@@ -65,7 +67,7 @@ void GsmModule::answerCall()
     sendCommand(command);
 }
 
-void GsmModule::parseGsmMessage(String &gmsMessage)
+void GsmModule::parseGsmMessage(String gmsMessage)
 {
     if (gmsMessage.charAt(0) == '\0') {
         gmsMessage = gmsMessage.substring(1, gmsMessage.length());
@@ -86,12 +88,12 @@ void GsmModule::parseGsmMessage(String &gmsMessage)
     }
 }
 
-bool GsmModule::isStatusCode(String response)
+bool GsmModule::isStatusCode(const String& response)
 {
     return response.charAt(0) != '+';
 }
 
-GsmStatusCode GsmModule::parseStatusCode(String response)
+GsmStatusCode GsmModule::parseStatusCode(const String& response)
 {
     if (response == CODE_OK)
         return OK;
