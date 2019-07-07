@@ -4,37 +4,38 @@
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 #include "GsmModule.h"
+#include "PhoneContext.h"
+#include "PhoneState.h"
+#include "Keys.h"
+#include "states/ReadyPhoneState.h"
 
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
-enum PhoneState
-{
-    READY,
-    DIALING,
-    CALLING,
-    ON_CALL,
-    INCOMING_CALL
-};
-
-class Phone : public IGsmPhoneListener
-// class Phone
+class Phone : public IGsmPhoneListener, public PhoneContext
 {
 public:
     Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd);
     ~Phone() = default;
+
     void onKeyEvent(KeypadEvent key);
     void onPhoneCall(String number) override;
     void onPhoneEvent(GsmStatusCode code) override;
 
-private:
-    void changePhoneState(PhoneState newState);
+    void changeState(PhoneState *newState) override;
 
+    GsmModule &getGsmModule() override;
+    LiquidCrystal_I2C &getLcd() override;
+
+    String getNumber() override;
+    void setNumber(const String &number) override;
+
+private:
     GsmModule &gsm;
     LiquidCrystal_I2C &lcd;
 
+    PhoneState *currentState = new ReadyPhoneState(*this);
     String phoneNumber;
-    PhoneState phoneState;
 };
 
 #endif

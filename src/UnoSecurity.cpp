@@ -8,6 +8,7 @@
 #include "UnoSecurity.h"
 #include "GsmModule.h"
 #include "Phone.h"
+#include "Keys.h"
 
 const char *LOG_TAG = "UnoSecurity";
 
@@ -15,10 +16,10 @@ const byte KEYPAD_ROWS = 4;
 const byte KEYPAD_COLUMNS = 4;
 
 char KEYPAD_KEYS[KEYPAD_ROWS][KEYPAD_COLUMNS] = {
-	{'1', '2', '3', 'A'},
-	{'4', '5', '6', 'B'},
-	{'7', '8', '9', 'C'},
-	{'*', '0', '#', 'D'},
+	{KEY_1, KEY_2, KEY_3, KEY_A},
+	{KEY_4, KEY_5, KEY_6, KEY_B},
+	{KEY_7, KEY_8, KEY_9, KEY_C},
+	{KEY_ASTERISK, KEY_0, KEY_SHARP, KEY_D},
 };
 
 byte KEYPAD_ROW_PINS[KEYPAD_ROWS] = {11, 10, 9, 8};

@@ -1,125 +1,40 @@
 #include "Phone.h"
 
-Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd)
-{
-    changePhoneState(READY);
+Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd) {
+    currentState->init();
 }
 
-void Phone::onKeyEvent(KeypadEvent key)
-{
-    switch (phoneState)
-    {
-    case READY:
-        if (key == 'A')
-        {
-            changePhoneState(DIALING);
-        }
-        break;
-    case DIALING:
-        switch (key)
-        {
-        case 'A':
-            gsm.call(phoneNumber);
-            changePhoneState(CALLING);
-            break;
-        case 'B':
-            changePhoneState(READY);
-            break;
-        case 'C':
-            phoneNumber = "+380959310248"; //TODO TEMP!!!
-            lcd.setCursor(0, 0);
-            lcd.print(phoneNumber);
-            break;
-        case 'D':
-        case '*':
-        case '#':
-            break;
-        default:
-            phoneNumber += key;
-            lcd.setCursor(0, 0);
-            lcd.print(phoneNumber);
-        }
-        break;
-    case CALLING: //fall thru
-    case ON_CALL:
-        if (key == 'B')
-        {
-            gsm.cancelCall();
-            changePhoneState(READY);
-        }
-        break;
-    case INCOMING_CALL:
-        if (key == 'A')
-        {
-            gsm.answerCall();
-            changePhoneState(ON_CALL);
-        }
-        else if (key == 'B')
-        {
-            gsm.cancelCall();
-            changePhoneState(READY);
-        }
-        break;
-    }
+void Phone::onKeyEvent(KeypadEvent key) {
+    currentState->onKeyEvent(key);
 }
 
-void Phone::changePhoneState(PhoneState newState)
-{
-    switch (newState)
-    {
-    case READY:
-        phoneNumber = "+";
-        lcd.clear();
-        lcd.print("Press A for dial");
-        break;
-    case DIALING:
-        lcd.clear();
-        lcd.print(phoneNumber);
-        break;
-    case CALLING:
-        lcd.clear();
-        lcd.print("Calling...");
-        lcd.setCursor(0, 1);
-        lcd.print(phoneNumber);
-        break;
-    case ON_CALL:
-        lcd.clear();
-        lcd.print("On call...");
-        lcd.setCursor(0, 1);
-        lcd.print(phoneNumber);
-        break;
-    case INCOMING_CALL:
-        lcd.clear();
-        lcd.print("Incoming call...");
-        lcd.setCursor(0, 1);
-        lcd.print(phoneNumber);
-        break;
-    }
-
-    phoneState = newState;
-}
-
-void Phone::onPhoneCall(String number)
-{
+void Phone::onPhoneCall(String number) {
     phoneNumber = number;
-    changePhoneState(INCOMING_CALL);
+    currentState->onPhoneCall();
 }
 
-void Phone::onPhoneEvent(GsmStatusCode code)
-{
-    if (code == RING)
-    {
-        if (phoneState != INCOMING_CALL)
-        {
-            onPhoneCall("-Unknown-");
-        }
-    }
-    else if (code == OK && phoneState == CALLING)
-    {
-        changePhoneState(ON_CALL);
-    }
-    else if (code != OK && phoneState != READY)
-    {
-        changePhoneState(READY);
-    }
+void Phone::onPhoneEvent(GsmStatusCode code) {
+    currentState->onPhoneEvent(code);
+}
+
+GsmModule &Phone::getGsmModule() {
+    return gsm;
+}
+
+LiquidCrystal_I2C &Phone::getLcd() {
+    return lcd;
+}
+
+void Phone::changeState(PhoneState *newState) {
+    delete currentState; //TODO DO NOT DELETE PREVIOUS STATE HERE, it is still in process!!!
+    currentState = newState;
+    currentState->init();
+}
+
+String Phone::getNumber() {
+    return phoneNumber;
+}
+
+void Phone::setNumber(const String &number) {
+    phoneNumber = number;
 }
