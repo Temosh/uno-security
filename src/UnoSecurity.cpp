@@ -6,8 +6,8 @@
 #include <Logger.h>
 
 #include "UnoSecurity.h"
-#include "GsmModule.h"
-#include "Phone.h"
+#include "gsm/GsmModule.h"
+#include "phone/Phone.h"
 #include "Keys.h"
 
 const char *LOG_TAG = "UnoSecurity";
@@ -51,8 +51,9 @@ void loop()
 
 	if (Serial.available())
 	{
-		String command = Serial.readString();
-		Serial.println(">" + command);
+	    char command[GSM_TASK_COMMAND_LENGTH + 1]{};
+		size_t length = Serial.readBytesUntil('\n', command, GSM_TASK_COMMAND_LENGTH);
+		command[length] = '\0';
 		gsmModule.sendCommand(command);
 	}
 }
@@ -60,7 +61,7 @@ void loop()
 void distributeTickEvent()
 {
 	keypad.getKeys();
-	gsmModule.check();
+    gsmModule.onTick();
 }
 
 void keypadEvent(KeypadEvent key)

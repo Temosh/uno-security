@@ -1,7 +1,8 @@
 #include <Keys.h>
-#include <states/OnCallPhoneState.h>
-#include <states/ReadyPhoneState.h>
-#include "states/IncomingCallPhoneState.h"
+#include <phone/states/OnCallPhoneState.h>
+#include <phone/states/ReadyPhoneState.h>
+#include "phone/states/IncomingCallPhoneState.h"
+
 
 IncomingCallPhoneState::IncomingCallPhoneState(PhoneContext &phoneContext) : PhoneState(phoneContext) {}
 
@@ -14,20 +15,20 @@ void IncomingCallPhoneState::init() {
 
 void IncomingCallPhoneState::onKeyEvent(KeypadEvent key) {
     if (key == KEY_A) {
-        phoneContext.getGsmModule().answerCall();
-        phoneContext.changeState(new OnCallPhoneState(phoneContext));
+        auto onCallPhoneState = new OnCallPhoneState(phoneContext);
+        if (phoneContext.getGsmModule().answerCall(phoneContext.getNumber(), onCallPhoneState)) {
+            phoneContext.changeState(onCallPhoneState);
+        }
     } else if (key == KEY_B) {
         phoneContext.getGsmModule().cancelCall();
         phoneContext.changeState(new ReadyPhoneState(phoneContext));
     }
 }
 
-void IncomingCallPhoneState::onPhoneCall() {
+void IncomingCallPhoneState::onPhoneCall(const char *number) {
 
 }
 
-void IncomingCallPhoneState::onPhoneEvent(GsmStatusCode code) {
-    if (code != OK && code != RING) {
-        phoneContext.changeState(new ReadyPhoneState(phoneContext));
-    }
+void IncomingCallPhoneState::onMissedPhoneCall(const char *number) {
+    phoneContext.changeState(new ReadyPhoneState(phoneContext));
 }

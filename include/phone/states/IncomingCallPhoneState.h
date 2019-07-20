@@ -1,17 +1,17 @@
 #ifndef IncomingCallPhoneState_H_
 #define IncomingCallPhoneState_H_
 
-#include "PhoneState.h"
+#include "phone/PhoneState.h"
 
 class IncomingCallPhoneState : public PhoneState {
 public:
-    IncomingCallPhoneState(PhoneContext &phoneContext);
+    explicit IncomingCallPhoneState(PhoneContext &phoneContext);
 
     void init() override;
 
     void onKeyEvent(KeypadEvent key) override;
-    void onPhoneCall() override;
-    void onPhoneEvent(GsmStatusCode code) override;
+    void onPhoneCall(const char *number) override;
+    void onMissedPhoneCall(const char *number) override;
 
 private:
     String number;

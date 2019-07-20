@@ -1,7 +1,8 @@
-#include "states/ReadyPhoneState.h"
-#include "states/IncomingCallPhoneState.h"
-#include "states/DialingPhoneState.h"
+#include "phone/states/ReadyPhoneState.h"
+#include "phone/states/IncomingCallPhoneState.h"
+#include "phone/states/DialingPhoneState.h"
 #include "Keys.h"
+
 
 ReadyPhoneState::ReadyPhoneState(PhoneContext &phoneContext) : PhoneState(phoneContext) {}
 
@@ -16,13 +17,11 @@ void ReadyPhoneState::onKeyEvent(KeypadEvent key) {
     }
 }
 
-void ReadyPhoneState::onPhoneCall() {
+void ReadyPhoneState::onPhoneCall(const char *number) {
+    phoneContext.setNumber(number);
     phoneContext.changeState(new IncomingCallPhoneState(phoneContext));
 }
 
-void ReadyPhoneState::onPhoneEvent(GsmStatusCode code) {
-    if (code == RING) {
-        phoneContext.setNumber("-Unknown-");
-        phoneContext.changeState(new IncomingCallPhoneState(phoneContext));
-    }
+void ReadyPhoneState::onMissedPhoneCall(const char *number) {
+
 }

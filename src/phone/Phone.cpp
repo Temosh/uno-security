@@ -1,4 +1,4 @@
-#include "Phone.h"
+#include "phone/Phone.h"
 
 Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd) {
     currentState->init();
@@ -8,13 +8,13 @@ void Phone::onKeyEvent(KeypadEvent key) {
     currentState->onKeyEvent(key);
 }
 
-void Phone::onPhoneCall(String number) {
-    phoneNumber = number;
-    currentState->onPhoneCall();
+void Phone::onPhoneCall(const char *number) {
+    strcpy(phoneNumber, number);
+    currentState->onPhoneCall(number);
 }
 
-void Phone::onPhoneEvent(GsmStatusCode code) {
-    currentState->onPhoneEvent(code);
+void Phone::onMissedPhoneCall(const char *number) {
+    currentState->onMissedPhoneCall(number);
 }
 
 GsmModule &Phone::getGsmModule() {
@@ -31,10 +31,10 @@ void Phone::changeState(PhoneState *newState) {
     currentState->init();
 }
 
-String Phone::getNumber() {
+char *Phone::getNumber() {
     return phoneNumber;
 }
 
-void Phone::setNumber(const String &number) {
-    phoneNumber = number;
+void Phone::setNumber(const char *number) {
+    strcpy(phoneNumber, number);
 }

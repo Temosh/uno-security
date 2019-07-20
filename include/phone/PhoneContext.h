@@ -3,7 +3,7 @@
 
 //enum PhoneStates
 //{
-//    READY,
+//    NOT_STARTED,
 //    DIALING,
 //    CALLING,
 //    ON_CALL,
@@ -19,8 +19,8 @@ public:
     virtual GsmModule &getGsmModule() = 0;
     virtual LiquidCrystal_I2C &getLcd() = 0;
 
-    virtual String getNumber() = 0;
-    virtual void setNumber(const String &number) = 0;
+    virtual char *getNumber() = 0;
+    virtual void setNumber(const char *number) = 0;
 };
 
 #endif //PhoneContext_H_

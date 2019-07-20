@@ -3,7 +3,7 @@
 
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
-#include "GsmModule.h"
+#include "gsm/GsmModule.h"
 #include "PhoneContext.h"
 
 class PhoneState {
@@ -14,8 +14,8 @@ public:
     virtual void init() = 0;
 
     virtual void onKeyEvent(KeypadEvent key) = 0;
-    virtual void onPhoneCall() = 0;
-    virtual void onPhoneEvent(GsmStatusCode code) = 0;
+    virtual void onPhoneCall(const char *number) = 0;
+    virtual void onMissedPhoneCall(const char *number) = 0;
 
 protected:
     PhoneContext &phoneContext;
