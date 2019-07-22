@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <avr/pgmspace.h>
 #include "../GsmTypes.h"
 #include "../GsmListeners.h"
 
@@ -20,12 +21,23 @@ namespace GsmTasks {
     protected:
         TaskStatus status = NOT_STARTED;
 
-        virtual bool generateCommand(char *command, const char *commandTemplate, ...) {
+        bool generateCommand(char *command, const char *commandTemplate, ...) {
             va_list args;
             va_start(args, commandTemplate);
             int commandLength = vsnprintf(command, GSM_TASK_COMMAND_LENGTH + 1, commandTemplate, args); //TODO check if there is terminator character
             va_end(args);
+            return validateCommand(command, commandLength);
+        }
 
+        bool generateCommand_P(char *command, PGM_P commandTemplate, ...) {
+            va_list args;
+            va_start(args, commandTemplate);
+            int commandLength = vsnprintf_P(command, GSM_TASK_COMMAND_LENGTH + 1, commandTemplate, args); //TODO check if there is terminator character
+            va_end(args);
+            return validateCommand(command, commandLength);
+        }
+
+        bool validateCommand(char *command, const int commandLength) {
             if (commandLength < 0 || commandLength > GSM_TASK_COMMAND_LENGTH) {
                 command[0] = '\0';
                 status = BAD_COMMAND;
@@ -37,6 +49,10 @@ namespace GsmTasks {
 
         static bool inline startsWithTag(const char *responseLine, const char *tag) {
             return strncmp(responseLine, tag, strlen(tag)) == 0;
+        }
+
+        static bool inline startsWithTag_P(const char *responseLine, PGM_P tag) {
+            return strncmp_P(responseLine, tag, strlen_P(tag)) == 0;
         }
 
     public:

@@ -3,12 +3,14 @@
 //
 
 #include "gsm/tasks/SmsTasks.h"
+#include "gsm/Sim800Commands.h"
 
 using namespace GsmTasks;
+using namespace Sim800Commands;
 
 
 bool ChangeSmsFormat::getCommand(char *command) {
-    return generateCommand(command, COMMAND_SMS_READ, format);
+    return generateCommand_P(command, COMMAND_SMS_READ, format);
 }
 
 bool ChangeSmsFormat::process(const char *responseLine) {
@@ -21,14 +23,14 @@ bool ChangeSmsFormat::process(const char *responseLine) {
 }
 
 bool GetSms::getCommand(char *command) {
-    return generateCommand(command, COMMAND_SMS_READ, index);
+    return generateCommand_P(command, COMMAND_SMS_READ, index);
 }
 
 //TODO Currently works with SMS-DELIVER only
 bool GetSms::process(const char *responseLine) {
     if (status != ACCEPTED && status != PROCESSING) return true;
 
-    if (startsWithTag(responseLine, TAG_SMS_READ)) {
+    if (startsWithTag_P(responseLine, TAG_SMS_READ)) {
         status = PROCESSING;
 
         char *startIndex;

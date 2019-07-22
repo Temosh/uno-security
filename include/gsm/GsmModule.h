@@ -18,6 +18,7 @@ class GsmModule
 public:
     GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages = true);
     ~GsmModule();
+    void init();
     void onTick();
 
     void addPhoneListener(IGsmPhoneListener *phoneListener) { this->phoneListener = phoneListener; };
@@ -45,7 +46,7 @@ private:
 
     static bool isUnsolicitedResultCode(const char *gsmOutputLine);
 
-    SoftwareSerial *gsm;
+    SoftwareSerial gsm;
     bool traceGsmMessages;
 
     IGsmPhoneListener *phoneListener{};

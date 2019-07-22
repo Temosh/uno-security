@@ -18,7 +18,7 @@ public:
 class IGsmSmsListener {
 public:
     virtual ~IGsmSmsListener() = default;;
-    virtual void onIncomingSms(String number, String sms) = 0;
+    virtual void onIncomingSms(const char *number, Sms sms) = 0;
 };
 
 class IGsmStatusListener {

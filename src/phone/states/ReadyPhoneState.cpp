@@ -8,7 +8,7 @@ ReadyPhoneState::ReadyPhoneState(PhoneContext &phoneContext) : PhoneState(phoneC
 
 void ReadyPhoneState::init() {
     phoneContext.getLcd().clear();
-    phoneContext.getLcd().print("Press A for dial");
+    phoneContext.getLcd().print(F("Press A for dial"));
 }
 
 void ReadyPhoneState::onKeyEvent(KeypadEvent key) {

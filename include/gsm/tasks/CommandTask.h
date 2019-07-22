@@ -11,12 +11,18 @@
 
 namespace GsmTasks {
     class CommandTask : public AbstractGsmTask {
-    private:
+    protected:
         const char *taskCommand;
     public:
         explicit CommandTask(const char *command) : taskCommand(command) {};
         bool getCommand(char *command) override { return generateCommand(command, taskCommand); }
         bool process(const char *responseLine) override { return isStatusCode(responseLine); }
+    };
+
+    class CommandProgmemTask : public CommandTask {
+    public:
+        explicit CommandProgmemTask(const char *command) : CommandTask(command) {};
+        bool getCommand(char *command) override { return generateCommand_P(command, taskCommand); }
     };
 }
 

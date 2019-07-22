@@ -18,14 +18,14 @@ void OnCallPhoneState::onKeyEvent(KeypadEvent key) {
 
 void OnCallPhoneState::onDialing(const char *number) {
     phoneContext.getLcd().clear();
-    phoneContext.getLcd().print("Dialing...");
+    phoneContext.getLcd().print(F("Dialing..."));
     phoneContext.getLcd().setCursor(0, 1);
     phoneContext.getLcd().print(number);
 }
 
 void OnCallPhoneState::onCallStart(const char *number) {
     phoneContext.getLcd().clear();
-    phoneContext.getLcd().print("On call...");
+    phoneContext.getLcd().print(F("On call..."));
     phoneContext.getLcd().setCursor(0, 1);
     phoneContext.getLcd().print(number);
 }

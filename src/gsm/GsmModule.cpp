@@ -12,18 +12,22 @@
 using namespace Sim800Commands;
 using namespace GsmTasks;
 
-GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(new SoftwareSerial(receivePin, transmitPin)) {
+GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(SoftwareSerial(receivePin, transmitPin)) {
     this->traceGsmMessages = traceGsmMessages;
-    gsm->begin(speed);
+    gsm.begin(speed);
 }
 
 GsmModule::~GsmModule() {
-    gsm->end();
-    delete gsm;
+    gsm.end();
+}
+
+void GsmModule::init() {
+    CommandProgmemTask at = CommandProgmemTask(COMMAND_AT);
+    processGsmTask(at, false);
 }
 
 void GsmModule::onTick() {
-    while (gsm->available()) {
+    while (gsm.available()) {
         char *outputLine = buffer;
         size_t outputLineLength = readGsmOutputLine(outputLine);
         if (outputLineLength == 0) continue;
@@ -40,8 +44,8 @@ void GsmModule::onTick() {
 size_t GsmModule::readGsmOutputLine(char *gsmOutputLine) {
     size_t lineLength = 0;
 
-    if (gsm->available()) {
-        lineLength = gsm->readBytesUntil('\r', gsmOutputLine, GSM_BUFFER_SIZE - 1);
+    if (gsm.available()) {
+        lineLength = gsm.readBytesUntil('\r', gsmOutputLine, GSM_BUFFER_SIZE - 1);
         gsmOutputLine[lineLength] = '\0';
 
         if (lineLength == 0) return lineLength;
@@ -118,8 +122,8 @@ bool GsmModule::executeGsmTask(GsmTasks::AbstractGsmTask &task) {
         Serial.println(buffer);
     }
 
-    gsm->print(buffer);
-    gsm->print(CR);
+    gsm.print(buffer);
+    gsm.print(CR);
 
     return waitForEcho(buffer);
 }

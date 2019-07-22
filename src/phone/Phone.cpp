@@ -1,6 +1,10 @@
 #include "phone/Phone.h"
 
 Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd) {
+
+}
+
+void Phone::init() {
     currentState->init();
 }
 

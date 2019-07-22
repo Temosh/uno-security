@@ -21,14 +21,16 @@ CallTask::CallTask(IGsmCallListener *callListener, const char *number) {
 }
 
 bool CallTask::getCommand(char *command) {
-    return generateCommand(command, COMMAND_DIAL, number);
+    return generateCommand_P(command, COMMAND_DIAL, number);
 }
 
 bool CallTask::accept() {
     if (!AbstractGsmTask::accept()) {
         return false;
     }
-    callListener->onDialing(number);
+    if (callListener) {
+        callListener->onDialing(number);
+    }
     return true;
 }
 

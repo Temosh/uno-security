@@ -5,8 +5,11 @@
 #ifndef UNO_SECURITY_CALLTASKS_H
 #define UNO_SECURITY_CALLTASKS_H
 
+#include "gsm/Sim800Commands.h"
 #include "gsm/GsmListeners.h"
 #include "AbstractGsmTasks.h"
+
+using namespace Sim800Commands;
 
 
 namespace GsmTasks {
@@ -36,7 +39,7 @@ namespace GsmTasks {
     public:
         explicit AnswerCallTask(CallTask &callTask) : callTask(callTask) {};
 
-        bool getCommand(char *command) override { return generateCommand(command, COMMAND_ANSWER); }
+        bool getCommand(char *command) override { return generateCommand_P(command, COMMAND_ANSWER); }
         bool process(const char *responseLine) override;
     };
 
@@ -46,7 +49,7 @@ namespace GsmTasks {
     public:
         explicit CancelCallTask(CallTask &callTask) : callTask(callTask) {};
 
-        bool getCommand(char *command) override { return generateCommand(command, COMMAND_DISCONNECT); }
+        bool getCommand(char *command) override { return generateCommand_P(command, COMMAND_DISCONNECT); }
         bool process(const char *responseLine) override;
     };
 

@@ -1,0 +1,13 @@
+323  - arduino
+468  - keypad
+566  - lcd
+681  - soft serial
+697  - gsm core
+750  - call task
+766  - call task (with 16 bytes for number buffer)
+1022 - gsm buffer
+1034 - logger
+1075 - phone core
+1253 - phone state
+1271 - phone (with 16 bytes for number buffer)
+1303 - total

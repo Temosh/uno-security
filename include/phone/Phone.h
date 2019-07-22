@@ -18,6 +18,8 @@ public:
     Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd);
     ~Phone() override = default;
 
+    void init();
+
     void onKeyEvent(KeypadEvent key);
     void onPhoneCall(const char *number) override;
     void onMissedPhoneCall(const char *number) override;
@@ -35,7 +37,7 @@ private:
     LiquidCrystal_I2C &lcd;
 
     PhoneState *currentState = new ReadyPhoneState(*this);
-    char phoneNumber[GSM_NUMBER_LENGTH + 1];
+    char phoneNumber[GSM_NUMBER_LENGTH + 1]{};
 };
 
 #endif

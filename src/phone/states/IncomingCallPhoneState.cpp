@@ -8,7 +8,7 @@ IncomingCallPhoneState::IncomingCallPhoneState(PhoneContext &phoneContext) : Pho
 
 void IncomingCallPhoneState::init() {
     phoneContext.getLcd().clear();
-    phoneContext.getLcd().print("Incoming call...");
+    phoneContext.getLcd().print(F("Incoming call..."));
     phoneContext.getLcd().setCursor(0, 1);
     phoneContext.getLcd().print(phoneContext.getNumber());
 }
