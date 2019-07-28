@@ -1,9 +1,5 @@
 #include "phone/Phone.h"
 
-Phone::Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd) : gsm(gsm), lcd(lcd) {
-
-}
-
 void Phone::init() {
     currentState->init();
 }
@@ -19,10 +15,6 @@ void Phone::onPhoneCall(const char *number) {
 
 void Phone::onMissedPhoneCall(const char *number) {
     currentState->onMissedPhoneCall(number);
-}
-
-GsmModule &Phone::getGsmModule() {
-    return gsm;
 }
 
 LiquidCrystal_I2C &Phone::getLcd() {
@@ -41,4 +33,12 @@ char *Phone::getNumber() {
 
 void Phone::setNumber(const char *number) {
     strcpy(phoneNumber, number);
+}
+
+void Phone::setPhoneHandler(IGsmPhoneHandler *handler) {
+    phoneHandler = handler;
+}
+
+IGsmPhoneHandler *Phone::getPhoneHandler() {
+    return phoneHandler;
 }

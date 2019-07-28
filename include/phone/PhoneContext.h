@@ -1,14 +1,8 @@
 #ifndef PhoneContext_H_
 #define PhoneContext_H_
 
-//enum PhoneStates
-//{
-//    NOT_STARTED,
-//    DIALING,
-//    CALLING,
-//    ON_CALL,
-//    INCOMING_CALL
-//};
+#include "gsm/handlers/IGsmPhoneHandler.h"
+
 
 class PhoneState;
 
@@ -16,7 +10,7 @@ class PhoneContext {
 public:
     virtual void changeState(PhoneState *newState) = 0;
 
-    virtual GsmModule &getGsmModule() = 0;
+    virtual IGsmPhoneHandler *getPhoneHandler() = 0;
     virtual LiquidCrystal_I2C &getLcd() = 0;
 
     virtual char *getNumber() = 0;

@@ -25,7 +25,7 @@ byte KEYPAD_COLUMN_PINS[KEYPAD_COLUMNS] = {7, 6, 5, 4};
 Keypad keypad(makeKeymap(KEYPAD_KEYS), KEYPAD_ROW_PINS, KEYPAD_COLUMN_PINS, KEYPAD_ROWS, KEYPAD_COLUMNS);
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 GsmModule gsmModule(2, 3, 4800);
-Phone phone(gsmModule, lcd);
+Phone phone(lcd);
 
 void setup() {
     Serial.begin(9600);
@@ -35,7 +35,7 @@ void setup() {
     lcd.backlight();
 
     keypad.addEventListener(keypadEvent);
-    gsmModule.addPhoneListener(&phone);
+    phone.setPhoneHandler(gsmModule.registerPhoneHandler(&phone));
     gsmModule.init();
     phone.init();
 }

@@ -9,7 +9,7 @@ using namespace GsmTasks;
 using namespace Sim800Commands;
 
 
-bool ChangeSmsFormat::getCommand(char *command) {
+bool ChangeSmsFormat::getNextCommand(char *command) {
     return generateCommand_P(command, COMMAND_SMS_READ, format);
 }
 
@@ -22,7 +22,7 @@ bool ChangeSmsFormat::process(const char *responseLine) {
     return false;
 }
 
-bool GetSms::getCommand(char *command) {
+bool GetSms::getNextCommand(char *command){
     return generateCommand_P(command, COMMAND_SMS_READ, index);
 }
 

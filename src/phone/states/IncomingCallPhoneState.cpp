@@ -16,11 +16,11 @@ void IncomingCallPhoneState::init() {
 void IncomingCallPhoneState::onKeyEvent(KeypadEvent key) {
     if (key == KEY_A) {
         auto onCallPhoneState = new OnCallPhoneState(phoneContext);
-        if (phoneContext.getGsmModule().answerCall(phoneContext.getNumber(), onCallPhoneState)) {
+        if (phoneContext.getPhoneHandler()->answerCall(onCallPhoneState)) {
             phoneContext.changeState(onCallPhoneState);
         }
     } else if (key == KEY_B) {
-        phoneContext.getGsmModule().cancelCall();
+        phoneContext.getPhoneHandler()->cancelCall();
         phoneContext.changeState(new ReadyPhoneState(phoneContext));
     }
 }

@@ -28,10 +28,11 @@ enum GsmStatusCode {
 };
 
 enum TaskStatus {
-    NOT_STARTED,
+    READY,
+    ON_HOLD,
+    EXECUTING,
     ACCEPTED,
     ABORTED,
-    BAD_COMMAND,
     PROCESSING,
     COMPLETED,
     FAILED

@@ -12,7 +12,9 @@
 using namespace Sim800Commands;
 using namespace GsmTasks;
 
-GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(SoftwareSerial(receivePin, transmitPin)) {
+
+GsmModule::GsmModule(uint8_t receivePin, uint8_t transmitPin, long speed, bool traceGsmMessages) : gsm(
+        SoftwareSerial(receivePin, transmitPin)) {
     this->traceGsmMessages = traceGsmMessages;
     gsm.begin(speed);
 }
@@ -22,23 +24,101 @@ GsmModule::~GsmModule() {
 }
 
 void GsmModule::init() {
-    CommandProgmemTask at = CommandProgmemTask(COMMAND_AT);
-    processGsmTask(at, false);
+    if (strlen_P(COMMAND_AT) > GSM_TASK_COMMAND_LENGTH) {
+        //TODO Add error log
+        return;
+    }
+    strcpy_P(buffer, COMMAND_AT);
+    executeGsmCommand(buffer);
 }
 
 void GsmModule::onTick() {
-    while (gsm.available()) {
-        char *outputLine = buffer;
-        size_t outputLineLength = readGsmOutputLine(outputLine);
-        if (outputLineLength == 0) continue;
-
-        processUnsolicitedGsmOutput(outputLine);
+    if (activeTask) {
+        if (activeTask->getStatus() == ON_HOLD ||
+            activeTask->getStatus() == COMPLETED ||
+            activeTask->getStatus() == FAILED ||
+            activeTask->getStatus() == ABORTED) {
+            activeTask = nullptr;
+        }
     }
 
-    if (ringing && (millis() - gsmRingTime > GSM_RING_TIMEOUT)) {
-        ringing = false;
-        phoneListener->onMissedPhoneCall("-Unknown-");
+    char *outputLine = buffer;
+    size_t outputLineLength = readGsmOutputLine(outputLine);
+
+    if (outputLineLength > 0) {
+        if (checkEcho(outputLine)) return;
+        if (processGsmResponses(outputLine)) return;
+    } else {
+        if (processOutgoingCommands()) return;
     }
+
+    if (activeTask && activeTask->getTimeout() > 0 && millis() - activeTaskLastActionTime > activeTask->getTimeout()) {
+        activeTask->abort();
+    }
+}
+
+bool GsmModule::processOutgoingCommands() {
+    if (strlen(activeCommand) > 0) return false;
+
+    if (!activeTask) {
+        for (int i = 0; i < gsmHandlerCount; ++i) {
+            if (gsmHandlers[i]->hasNextCommand()) {
+                activeTask = gsmHandlers[i];
+                break;
+            }
+        }
+    }
+
+    if (!activeTask || !activeTask->hasNextCommand()) return false;
+
+    activeTask->getNextCommand(buffer);
+    if (strlen(buffer) < 1 || strlen(buffer) > GSM_TASK_COMMAND_LENGTH) {
+        activeTask->abort();
+        return false;
+    }
+
+    strcpy(activeCommand, buffer);
+    executeGsmCommand(activeCommand);
+    activeTaskLastActionTime = millis();
+    return true;
+}
+
+bool GsmModule::checkEcho(char *gsmOutputLine) {
+    if (strlen(activeCommand) > 0) {
+        if (strcmp(activeCommand, gsmOutputLine) == 0) {
+            activeTask->accept();
+            activeCommand[0] = '\0';
+            activeTaskLastActionTime = millis();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool GsmModule::processGsmResponses(char *gsmOutputLine) {
+    if (activeTask) {
+        if (activeTask->process(gsmOutputLine)) {
+            activeTaskLastActionTime = millis();
+            return true;
+        }
+    } else {
+        for (int i = 0; i < gsmHandlerCount; ++i) {
+            if (gsmHandlers[i]->process(gsmOutputLine)) {
+                if (gsmHandlers[i]->getStatus() == PROCESSING) {
+                    activeTask = gsmHandlers[i];
+                    activeTaskLastActionTime = millis();
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+IGsmPhoneHandler *GsmModule::registerPhoneHandler(IGsmPhoneListener *phoneListener) {
+    phoneHandler.setPhoneListener(phoneListener);
+    return &phoneHandler;
 }
 
 size_t GsmModule::readGsmOutputLine(char *gsmOutputLine) {
@@ -63,177 +143,21 @@ size_t GsmModule::readGsmOutputLine(char *gsmOutputLine) {
     return lineLength;
 }
 
-void GsmModule::processUnsolicitedGsmOutput(char *gsmOutputLine) {
-    auto statusCode = parseStatusCode(gsmOutputLine);
-    if (isStatusCode(statusCode)) {
-        if (callTask.getStatus() == ACCEPTED || callTask.getStatus() == PROCESSING) {
-            callTask.process(gsmOutputLine);
-            return;
-        } else if (statusCode == RING) {
-            gsmRingTime = millis();
-            if (!ringing) {
-                ringing = true;
-                phoneListener->onPhoneCall("-Unknown-");
-            }
-            return;
-        } else if (ringing && statusCode != OK ) {
-            ringing = false;
-            phoneListener->onMissedPhoneCall("-Unknown-");
-            return;
-        }
-    }
-
-    if (isUnsolicitedResultCode(gsmOutputLine)) {
-        return;
-    }
-}
-
 bool GsmModule::sendCommand(char *command) {
+    if (activeTask) return false;
     trim(command);
-    auto commandTask = CommandTask(command);
-    return processGsmTask(commandTask);
-}
-
-bool GsmModule::processGsmTask(AbstractGsmTask &task, bool wait) {
-    if (callTask.getStatus() == PROCESSING) return false; //Check if call is active
-    if (task.getStatus() != NOT_STARTED) return false;
-
-    gsmTaskStartTime = millis();
-
-    if (executeGsmTask(task)) {
-        task.accept();
-    } else {
-        task.abort();
-        return false;
-    }
-
-    if (wait) {
-        return waitForResponse(task);
-    } else {
+    if (strlen(command) > 0) {
+        executeGsmCommand(command);
         return true;
     }
+    return false;
 }
 
-bool GsmModule::executeGsmTask(GsmTasks::AbstractGsmTask &task) {
-    task.getCommand(buffer);
-
+void GsmModule::executeGsmCommand(const char *command) {
     if (traceGsmMessages) {
         Serial.print(">");
-        Serial.println(buffer);
+        Serial.println(command);
     }
-
-    gsm.print(buffer);
+    gsm.print(command);
     gsm.print(CR);
-
-    return waitForEcho(buffer);
-}
-
-bool GsmModule::waitForEcho(const char *command) {
-    while (millis() - gsmTaskStartTime < GSM_TASK_TIMEOUT) {
-        char *outputLine = buffer;
-        size_t outputLineLength = readGsmOutputLine(outputLine);
-        if (outputLineLength == 0) continue;
-
-        if (strcmp(outputLine, command) == 0) return true;
-
-        processUnsolicitedGsmOutput(outputLine);
-    }
-    return false;
-}
-
-bool GsmModule::waitForResponse(GsmTasks::AbstractGsmTask &task) {
-    while (millis() - gsmTaskStartTime < GSM_TASK_TIMEOUT) {
-        char *outputLine = buffer;
-        size_t outputLineLength = readGsmOutputLine(outputLine);
-        if (outputLineLength == 0) continue;
-
-        if (task.process(outputLine)) {
-            return true;
-        }
-
-        if (task.getStatus() != PROCESSING) {
-            processUnsolicitedGsmOutput(outputLine);
-        }
-    }
-
-    task.abort();
-    return false;
-}
-
-bool GsmModule::isUnsolicitedResultCode(const char *gsmOutputLine) {
-    return gsmOutputLine[0] == '+';
-}
-
-bool GsmModule::call(const char *number, IGsmCallListener *callListener) {
-    if (callTask.getStatus() == ACCEPTED || callTask.getStatus() == PROCESSING) return false;
-    if (ringing) return false;
-
-    callTask = CallTask(callListener, number);
-    if (callTask.getStatus() == NOT_STARTED) {
-        if (processGsmTask(callTask, false)) {
-            return true;
-        } else {
-            cancelCall();
-            return false;
-        }
-    } else {
-        return false;
-    }
-}
-
-bool GsmModule::answerCall(const char *number, IGsmCallListener *callListener) {
-    if (callTask.getStatus() == ACCEPTED || callTask.getStatus() == PROCESSING) return false;
-    if (!ringing) return false;
-
-    callTask = CallTask(callListener, number);
-
-    if (callTask.getStatus() != NOT_STARTED) {
-        return false;
-    }
-
-    auto task = AnswerCallTask(callTask);
-    if (processGsmTask(task)) {
-        ringing = false;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool GsmModule::cancelCall() {
-    ringing = false;
-    auto task = CancelCallTask(callTask);
-
-    gsmTaskStartTime = millis();
-
-    if (executeGsmTask(task)) {
-        task.accept();
-    } else {
-        task.abort();
-        return false;
-    }
-
-    return waitForResponse(task);
-}
-
-bool GsmModule::sendSms(const char *number, const char *message) {
-    return false;
-}
-
-Sms *GsmModule::readAllSms() {
-    return nullptr;
-}
-
-Sms *GsmModule::readNewSms() {
-    return nullptr;
-}
-
-Sms GsmModule::readSms(int index) {
-    auto task = GsmTasks::GetSms(index);
-    processGsmTask(task);
-    if (task.getStatus() == COMPLETED) {
-        return task.getResultData();
-    }
-
-    return Sms{};
 }

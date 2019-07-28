@@ -18,7 +18,7 @@ void DialingPhoneState::onKeyEvent(KeypadEvent key) {
         case KEY_A:
             {
                 auto *onCallPhoneState = new OnCallPhoneState(phoneContext);
-                if (phoneContext.getGsmModule().call(number, onCallPhoneState)) {
+                if (phoneContext.getPhoneHandler()->call(number, onCallPhoneState)) {
                     phoneContext.setNumber(number);
                     phoneContext.changeState(onCallPhoneState);
                 }

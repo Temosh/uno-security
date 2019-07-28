@@ -8,6 +8,9 @@
 #include "gsm/Sim800Commands.h"
 #include "gsm/GsmListeners.h"
 #include "AbstractGsmTasks.h"
+#include "GsmChainTask.h"
+
+#define GSM_RING_TIMEOUT 4000
 
 using namespace Sim800Commands;
 
@@ -16,41 +19,60 @@ namespace GsmTasks {
 
     class CallTask : public AbstractGsmTask {
     private:
-        IGsmCallListener *callListener{};
-        char number[GSM_NUMBER_LENGTH + 1]{};
-
+        const char *number{};
     public:
-        CallTask() { status = ABORTED; };
-        CallTask(IGsmCallListener *callListener, const char *number);
+        CallTask() { status = FAILED; };
+        explicit CallTask(const char *number);
 
-        bool accept() override;
-        bool abort() override;
+        bool getNextCommand(char *command) override;
+        unsigned long getTimeout() override;
         bool process(const char *responseLine) override;
-
-        bool getCommand(char *command) override;
-
-        void answerCall();
-        void cancelCall(TaskStatus statusCode);
     };
 
     class AnswerCallTask : public AbstractGsmTask {
-    private:
-        CallTask &callTask;
     public:
-        explicit AnswerCallTask(CallTask &callTask) : callTask(callTask) {};
-
-        bool getCommand(char *command) override { return generateCommand_P(command, COMMAND_ANSWER); }
+        bool getNextCommand(char *command) override;
         bool process(const char *responseLine) override;
     };
 
     class CancelCallTask : public AbstractGsmTask {
-    private:
-        CallTask &callTask;
     public:
-        explicit CancelCallTask(CallTask &callTask) : callTask(callTask) {};
-
-        bool getCommand(char *command) override { return generateCommand_P(command, COMMAND_DISCONNECT); }
+        bool getNextCommand(char *command) override;
         bool process(const char *responseLine) override;
+    };
+
+    class CallHandlerTask : public AbstractGsmTask {
+    public:
+        CallHandlerTask() { status = ON_HOLD; };
+
+        bool getNextCommand(char *command) override { return false; }
+        unsigned long getTimeout() override { return GSM_TASK_NO_TIMEOUT; }
+        bool accept() override { return false; }
+        bool abort() override { return false; }
+
+        bool process(const char *responseLine) override;
+    };
+
+    class RingHandlerTask : public AbstractGsmTask {
+    public:
+        RingHandlerTask() { status = ON_HOLD; };
+
+        bool getNextCommand(char *command) override { return false; }
+        unsigned long getTimeout() override { return GSM_RING_TIMEOUT; }
+        bool accept() override { return false; }
+        bool abort() override { return false; }
+
+        bool process(const char *responseLine) override;
+    };
+
+    class NoOpTask : public AbstractGsmTask {
+    public:
+        NoOpTask() { status = ON_HOLD; };
+
+        bool getNextCommand(char *command) override { return false; }
+        bool accept() override { return false; }
+        bool abort() override { return false; }
+        bool process(const char *responseLine) override { return false; }
     };
 
 }

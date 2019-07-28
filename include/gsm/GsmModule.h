@@ -3,14 +3,14 @@
 
 #include <WString.h>
 #include <SoftwareSerial.h>
+#include <gsm/handlers/IGsmPhoneHandler.h>
+#include "gsm/handlers/PhoneHandler.h"
 #include "gsm/GsmTypes.h"
 #include "gsm/tasks/AbstractGsmTasks.h"
 #include "gsm/tasks/CallTasks.h"
 #include "gsm/GsmListeners.h"
 
-#define GSM_RING_TIMEOUT 4000
-#define GSM_TASK_TIMEOUT 5000
-#define GSM_BUFFER_SIZE 256
+#define GSM_BUFFER_SIZE 350
 
 
 class GsmModule
@@ -21,43 +21,35 @@ public:
     void init();
     void onTick();
 
-    void addPhoneListener(IGsmPhoneListener *phoneListener) { this->phoneListener = phoneListener; };
-    void addSmsListener(IGsmSmsListener *smsListener) { this->smsListener = smsListener; };
-    void addStatusListener(IGsmStatusListener *statusListener) { this->statusListener = statusListener; };;
+//    IGsmEventHandler *registerEventHandler(IGsmEventListener *eventListener);
+    IGsmPhoneHandler *registerPhoneHandler(IGsmPhoneListener *phoneListener);
+//    IGsmSmsHandler *registerSmsHandler(IGsmSmsListener *smsListener);
 
     bool sendCommand(char *command);
 
-    bool call(const char *number, IGsmCallListener *callListener);
-    bool answerCall(const char *number, IGsmCallListener *callListener);
-    bool cancelCall();
-
-    bool sendSms(const char *number, const char *message);
-    Sms *readAllSms();
-    Sms *readNewSms();
-    Sms readSms(int index);
-
 private:
-    size_t readGsmOutputLine(char *gsmOutputLine);
-    void processUnsolicitedGsmOutput(char *gsmOutputLine);
-    bool processGsmTask(GsmTasks::AbstractGsmTask &task, bool waitForResponse = true);
-    bool executeGsmTask(GsmTasks::AbstractGsmTask &task);
-    bool waitForEcho(const char *command);
-    bool waitForResponse(GsmTasks::AbstractGsmTask &task);
+    bool processOutgoingCommands();
+    bool checkEcho(char *gsmOutputLine);
+    bool processGsmResponses(char *gsmOutputLine);
 
-    static bool isUnsolicitedResultCode(const char *gsmOutputLine);
+    size_t readGsmOutputLine(char *gsmOutputLine);
+    void executeGsmCommand(const char *command);
 
     SoftwareSerial gsm;
     bool traceGsmMessages;
 
-    IGsmPhoneListener *phoneListener{};
-    IGsmSmsListener *smsListener{};
-    IGsmStatusListener *statusListener{};
+    PhoneHandler phoneHandler{};
+//    SmsHandler smsHandler{};
+//    EventHandler eventHandler{};
 
-    GsmTasks::CallTask callTask{};
-    bool ringing = false;
+    //TODO Hardcode
+    GsmTasks::AbstractGsmTask *gsmHandlers[1] = {&phoneHandler};
+    int gsmHandlerCount = 1;
 
-    unsigned long gsmRingTime = -1;
-    unsigned long gsmTaskStartTime = -1;
+    GsmTasks::AbstractGsmTask *activeTask{};
+    char activeCommand[GSM_TASK_COMMAND_LENGTH]{};
+    unsigned long activeTaskLastActionTime = -1;
+
     char buffer[GSM_BUFFER_SIZE]{};
 };
 

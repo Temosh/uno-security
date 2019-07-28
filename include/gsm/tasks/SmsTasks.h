@@ -16,20 +16,19 @@ namespace GsmTasks {
     public:
         explicit ChangeSmsFormat(int format) : format(format) {};
 
-        bool getCommand(char *command) override;
+        bool getNextCommand(char *command) override;
         bool process(const char *responseLine) override;
     };
 
-    class GetSms : public AbstractGetGsmTask<Sms> {
+    class GetSms : public AbstractGsmGetTask<Sms> {
     private:
         int index;
         Sms sms{};
     public:
         explicit GetSms(int index) : index(index) {};
 
-        bool getCommand(char *command) override;
+        bool getNextCommand(char *command) override;
         bool process(const char *responseLine) override;
-
         Sms getResultData() override { return sms; };
     };
 }

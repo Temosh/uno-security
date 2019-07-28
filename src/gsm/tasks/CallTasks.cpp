@@ -7,93 +7,64 @@
 using namespace GsmTasks;
 
 
-CallTask::CallTask(IGsmCallListener *callListener, const char *number) {
-    status = NOT_STARTED;
-    this->callListener = callListener;
-
+CallTask::CallTask(const char *number) {
     size_t length = strlen(number);
     if (length > GSM_NUMBER_LENGTH) {
-        status = BAD_COMMAND;
+        status = FAILED;
         return;
     }
-    strcpy(this->number, number);
-    this->number[length] = '\0';
+    this->number = number;
 }
 
-bool CallTask::getCommand(char *command) {
-    return generateCommand_P(command, COMMAND_DIAL, number);
-}
-
-bool CallTask::accept() {
-    if (!AbstractGsmTask::accept()) {
-        return false;
+bool CallTask::getNextCommand(char *command) {
+    if (status == READY) {
+        status = EXECUTING;
+        return generateCommand_P(command, COMMAND_DIAL, number);
     }
-    if (callListener) {
-        callListener->onDialing(number);
-    }
-    return true;
+    return false;
 }
 
-bool CallTask::abort() {
-    cancelCall(FAILED);
-    return AbstractGsmTask::abort();
+unsigned long CallTask::getTimeout() {
+    if (status == ACCEPTED) {
+        return GSM_TASK_NO_TIMEOUT;
+    } else {
+        return AbstractGsmTask::getTimeout();
+    }
 }
 
 bool CallTask::process(const char *responseLine) {
     GsmStatusCode gsmStatusCode = parseStatusCode(responseLine);
 
-    if (gsmStatusCode == UNDEFINED) {
-        if (isErrorCode(gsmStatusCode)) {
-            cancelCall(FAILED);
-            return true;
-        }
-    }
     if (status == ACCEPTED) {
         if (gsmStatusCode == OK) {
-            answerCall();
-            return false;
+            status = COMPLETED;
+            return true;
         } else if (gsmStatusCode != UNDEFINED) {
-            cancelCall(FAILED);
+            status = FAILED;
             return true;
-        }
-    } else if (status == PROCESSING) {
-        if (isSuccessCode(gsmStatusCode)) {
-            cancelCall(COMPLETED);
-            return true;
-        } else {
-            cancelCall(FAILED);
-            return false;
         }
     }
 
     return false;
 }
 
-void CallTask::answerCall() {
-    status = PROCESSING;
-    if (callListener) {
-        callListener->onCallStart(number);
-    }
-}
-
-void CallTask::cancelCall(TaskStatus statusCode) {
-    this->status = statusCode;
-    if (callListener) {
-        callListener->onCallEnd(number);
-    }
-}
-
 bool AnswerCallTask::process(const char *responseLine) {
     if (status == ACCEPTED) {
-        if (parseStatusCode(responseLine) == OK) {
+        GsmStatusCode gsmStatusCode = parseStatusCode(responseLine);
+        if (gsmStatusCode == OK) {
             status = COMPLETED;
-            callTask.answerCall();
-        } else {
+            return true;
+        } else if (isErrorCode(gsmStatusCode)) {
             status = FAILED;
-            callTask.cancelCall(FAILED);
+            return true;
         }
     }
-    return true;
+    return false;
+}
+
+bool AnswerCallTask::getNextCommand(char *command) {
+    status = EXECUTING;
+    return generateCommand_P(command, COMMAND_ANSWER);
 }
 
 bool CancelCallTask::process(const char *responseLine) {
@@ -101,13 +72,24 @@ bool CancelCallTask::process(const char *responseLine) {
         GsmStatusCode gsmStatusCode = parseStatusCode(responseLine);
         if (gsmStatusCode == OK) {
             status = COMPLETED;
-            callTask.cancelCall(COMPLETED);
             return true;
         } else if (isErrorCode(gsmStatusCode)) {
             status = FAILED;
-            callTask.cancelCall(FAILED);
             return true;
         }
     }
     return false;
+}
+
+bool CancelCallTask::getNextCommand(char *command) {
+    status = EXECUTING;
+    return generateCommand_P(command, COMMAND_DISCONNECT);
+}
+
+bool CallHandlerTask::process(const char *responseLine) {
+    return parseStatusCode(responseLine) != RING;
+}
+
+bool RingHandlerTask::process(const char *responseLine) {
+    return parseStatusCode(responseLine) == RING; //TODO Need to catch NO CARRIER
 }

@@ -11,7 +11,7 @@ void OnCallPhoneState::init() {
 
 void OnCallPhoneState::onKeyEvent(KeypadEvent key) {
     if (key == KEY_B) {
-        phoneContext.getGsmModule().cancelCall();
+        phoneContext.getPhoneHandler()->cancelCall();
 //        phoneContext.changeState(new ReadyPhoneState(phoneContext)); //TODO Check me!!!
     }
 }

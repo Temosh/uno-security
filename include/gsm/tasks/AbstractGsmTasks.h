@@ -13,13 +13,15 @@
 #include "../GsmListeners.h"
 
 #define GSM_TASK_COMMAND_LENGTH 30
+#define GSM_DEFAULT_TASK_TIMEOUT 5000
+#define GSM_TASK_NO_TIMEOUT -1
 
 
 namespace GsmTasks {
 
     class AbstractGsmTask {
     protected:
-        TaskStatus status = NOT_STARTED;
+        TaskStatus status = READY;
 
         bool generateCommand(char *command, const char *commandTemplate, ...) {
             va_list args;
@@ -40,28 +42,31 @@ namespace GsmTasks {
         bool validateCommand(char *command, const int commandLength) {
             if (commandLength < 0 || commandLength > GSM_TASK_COMMAND_LENGTH) {
                 command[0] = '\0';
-                status = BAD_COMMAND;
+                status = FAILED;
                 return false;
             }
 
             return true;
         }
 
-        static bool inline startsWithTag(const char *responseLine, const char *tag) {
+        static bool startsWithTag(const char *responseLine, const char *tag) {
             return strncmp(responseLine, tag, strlen(tag)) == 0;
         }
 
-        static bool inline startsWithTag_P(const char *responseLine, PGM_P tag) {
+        static bool startsWithTag_P(const char *responseLine, PGM_P tag) {
             return strncmp_P(responseLine, tag, strlen_P(tag)) == 0;
         }
 
     public:
         virtual ~AbstractGsmTask() = default;
 
-        virtual bool getCommand(char *command) = 0;
+        virtual bool hasNextCommand() { return status == READY; };
+        virtual bool getNextCommand(char *command) = 0;
+
+        virtual unsigned long getTimeout() { return GSM_DEFAULT_TASK_TIMEOUT; };
 
         virtual bool accept() {
-            if (status == NOT_STARTED) {
+            if (status == EXECUTING) {
                 status = ACCEPTED;
                 return true;
             }
@@ -69,7 +74,7 @@ namespace GsmTasks {
         };
 
         virtual bool abort() {
-            if (status == NOT_STARTED || status == ACCEPTED || status == PROCESSING) {
+            if (status != COMPLETED && status != FAILED) {
                 status = ABORTED;
                 return true;
             }
@@ -78,13 +83,14 @@ namespace GsmTasks {
 
         virtual bool process(const char *responseLine) = 0;
 
-        TaskStatus getStatus() {
+        virtual TaskStatus getStatus() {
             return status;
         };
     };
 
     template<typename DATA>
-    class AbstractGetGsmTask : public AbstractGsmTask {
+    class AbstractGsmGetTask : public AbstractGsmTask {
+    public:
         virtual DATA getResultData() = 0;
     };
 

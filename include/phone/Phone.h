@@ -8,6 +8,7 @@
 #include "PhoneState.h"
 #include "Keys.h"
 #include "phone/states/ReadyPhoneState.h"
+#include "gsm/handlers/IGsmPhoneHandler.h"
 
 typedef unsigned int uint;
 typedef unsigned long ulong;
@@ -15,7 +16,7 @@ typedef unsigned long ulong;
 class Phone : public IGsmPhoneListener, public PhoneContext
 {
 public:
-    Phone(GsmModule &gsm, LiquidCrystal_I2C &lcd);
+    explicit Phone(LiquidCrystal_I2C &lcd) : lcd(lcd) {};
     ~Phone() override = default;
 
     void init();
@@ -26,14 +27,16 @@ public:
 
     void changeState(PhoneState *newState) override;
 
-    GsmModule &getGsmModule() override;
+    IGsmPhoneHandler *getPhoneHandler() override;
     LiquidCrystal_I2C &getLcd() override;
 
     char *getNumber() override;
     void setNumber(const char *number) override;
 
+    void setPhoneHandler(IGsmPhoneHandler *handler);
+
 private:
-    GsmModule &gsm;
+    IGsmPhoneHandler *phoneHandler{};
     LiquidCrystal_I2C &lcd;
 
     PhoneState *currentState = new ReadyPhoneState(*this);
